@@ -155,18 +155,16 @@
 				this.props.onUpdate(this.props.data);
 			}			
 		},
-		componentDidUpdate: function(){
-			if (this.state.edit === 1) {
-				$('#mname').val(this.props.data.name);
-				$('#mscore').val(this.props.data.score);	
-			}			
+		componentDidUpdate: function(){			
+			$('#mname' + this.props.data.assignment_id).val(this.props.data.name);
+			$('#mscore' + this.props.data.assignment_id).val(this.props.data.score);							
 		},
 		render: function(){			
 			if (this.state.edit === 1) {
 				return (
 					<li>
-						<input id="mname" ref="mname" type="text" />
-						<input id="mscore" ref="mscore" type="text" />
+						<input id={"mname" + this.props.data.assignment_id} ref="mname" type="text" />
+						<input id={"mscore" + this.props.data.assignment_id} ref="mscore" type="text" />
 						<input onClick={this.handleCancelEdit} type="submit" value="Cancel" />
 						<input onClick={this.handleUpdate} type="submit" value="Update" />
 					</li>
