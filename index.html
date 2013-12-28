@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../build/react.min.js"></script>
+    <script src="../../build/JSXTransformer.js"></script>
+  </head>
+  <body>
+    <div id="example"></div>
+    <script type="text/jsx">
+      /** @jsx React.DOM */
+
+var Cell = React.createClass({    
+	getInitialState: function(){
+		return {v: this.props.data.value};
+	},
+	handleInput: function(e){
+		this.props.onInput1(this.props.data.id);
+	},
+	handleBlur: function(e){
+		this.props.onBlur1();
+	},
+	handleChange: function(e){
+		this.setState({v: e.target.value});
+		this.props.data.value = e.target.value;
+		this.props.onChange1(this.props.data);
+	},
+    render: function() {
+		if (this.props.data.edit === 0) {
+		 return (
+		   <div ref="t" onClick={this.handleInput}>{this.props.data.value}</div>
+		  );     
+		} else {
+			return (
+				<input onFocus={this.handleInput} onChange={this.handleChange} onBlur={this.handleBlur} type="text" value={this.state.v} />
+			);
+		}
+    }
+});
+
+var Row = React.createClass({
+    getInitialState: function(){
+        return {active: -1};
+    },
+    handleInput: function(obj){   		
+        this.setState({active: obj});
+    },
+    handleBlur: function(){
+        this.setState({active: -1});
+    },
+	handleChange: function(d){
+		return false;
+	},
+    getStatus: function(id){        
+        if (this.state.active === id) {
+            return 1;
+        } else {
+            return 0;
+        }
+    },    
+    render: function(){        
+        var self = this;
+		var x = this.props.data.map(function(d){
+			d.edit = self.getStatus(d.id);
+			return d;
+		}).map(function(d){
+			return <td><Cell data={d} onBlur1={self.handleBlur} onChange1={this.handleChange} onInput1={self.handleInput} /></td>
+		});
+        return (
+            <tr>{x}</tr>			
+            
+        );
+    }
+});
+var data = [
+	[ {sv_id: 0,id: 0, value: 0},{sv_id: 0,id: 1, value: 1}],
+	[ {sv_id: 1,id: 0, value: 0},{sv_id: 1,id: 1, value: 1}]
+];	
+
+
+var Grade = React.createClass({
+	render: function(){
+		var x = this.props.data.map(function(d){
+			return <Row data={d} />
+		});
+		return (
+			<table>
+            <tbody>
+            {x}</tbody>
+            </table>
+		);
+	}
+});
+React.renderComponent(<Grade data={data} />, document.getElementById('example'));
+
+
+    </script>
+  </body>
+</html>

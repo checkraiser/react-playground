@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../build/react.min.js"></script>
+    <script src="../../build/JSXTransformer.js"></script>
+  </head>
+  <body>
+    <div id="example"></div>
+    <script type="text/jsx">
+      /** @jsx React.DOM */
+	
+	var DATA = [
+		{name: 'BT1', assignments: 
+				[
+					{name: 'BT11', score: 10},
+					{name: 'BT12', score: 8}
+				]
+		},
+		{name: 'BT2', assignments: 
+				[
+					{name: 'BT21', score: 9},
+					{name: 'BT22', score: 8}
+				]}
+		];
+	var Assignments = React.createClass({
+		getInitialState: function(){
+			return {data: this.props.data};			
+		},
+		handleChange: function(obj){
+			var x = this.state.data.filter(function(t){
+				return t.name === obj.group;
+			});
+			if (x.length > 0) {
+				var y = x[0];
+				if (y != null) {
+					y.assignments.push({name: obj.name, score: obj.score});
+					this.forceUpdate();	
+				}
+			}
+		},
+		loadData: function(){
+			this.setState({data: DATA});
+		},
+		componentWillMount: function(){
+			this.loadData();
+		},
+		render: function(){
+			var self = this;
+			var x = this.state.data.map(function(d){
+				return <li><p>{d.name}</p><Assignment group={d.name} onChange={self.handleChange} data={d.assignments} /></li>
+			});
+			return (
+				<ul>{x}</ul>				
+			);
+		}
+	});
+	var Assignment = React.createClass({
+		getInitialState: function(){
+			return {add: 0};
+		},
+		handleClick: function(){
+			this.setState({add: 1});
+		},
+		handleCancel: function(){
+			this.setState({add: 0});
+		},
+		handleUpdate: function(){
+			var name = this.refs.name.getDOMNode().value;
+			var score = this.refs.score.getDOMNode().value;
+			this.props.onChange({group: this.props.group, name: name, score: score});
+			this.setState({add: 0});
+		},
+		render: function(){
+			var x = this.props.data.map(function(d){
+				return <li><span>{d.name}, score: {d.score}</span></li>
+			});
+			if (this.state.add === 0){
+				return (							
+					<div>
+						<button onClick={this.handleClick}>Add</button>
+						<ul>{x}</ul>
+					</div>
+				);
+			}
+			else {
+				return (
+					<div>
+							<input ref="name" type="text" placeholder="Name" value={this.state.name} />
+							<input ref="score" type="text" placeholder="Score" value={this.state.score} />
+							<button onClick={this.handleCancel} >Cancel</button>
+							<button onClick={this.handleUpdate} >Update</button>
+						<ul>{x}</ul>
+					</div>
+				);
+			}
+		}
+	});
+	React.renderComponent(<Assignments data={DATA} />, document.body);
+    </script>
+  </body>
+</html>

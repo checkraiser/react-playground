@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../build/react.min.js"></script>
+    <script src="../../build/JSXTransformer.js"></script>
+  </head>
+  <body>
+    <div id="example"></div>
+    <script type="text/jsx">
+      /** @jsx React.DOM */
+
+var Cell = React.createClass({    
+	getInitialState: function(){
+		return {v: this.props.data.value};
+	},
+	handleInput: function(e){
+		this.props.onInput1(this.props.data.id, this.props.data.sv_id);
+	},
+	handleBlur: function(e){
+		this.props.onBlur1();
+	},
+	handleChange: function(e){
+		this.setState({v: e.target.value});
+		this.props.data.value = e.target.value;
+		this.props.onChange1(this.props.data);
+	},
+	handleKey: function(e){
+		if (e.keyCode == 38) {
+			this.props.onKeyPress(this.props.data.id, this.props.data.sv_id, 'up');			
+		} else if (e.keyCode == 40) {
+			this.props.onKeyPress(this.props.data.id, this.props.data.sv_id, 'down');
+		}
+	},	
+    render: function() {
+		if (this.props.data.edit === 0) {
+		 return (
+		   <div ref="t" onClick={this.handleInput}>{this.props.data.value}</div>
+		  );     
+		} else {
+			return (
+				<input onKeyPress={this.handleKey} onFocus={this.handleInput} onChange={this.handleChange} onBlur={this.handleBlur} type="text" value={this.state.v} />
+			);
+		}
+    }
+});
+
+var Row = React.createClass({
+    
+    render: function(){        
+        var self = this;
+		var x = this.props.data.map(function(d){			
+			return <td><Cell onKeyPress={self.props.handleKeyPress} data={d} onBlur1={self.props.handleBlur} onChange1={self.props.handleChange} onInput1={self.props.handleInput} /></td>
+		});
+        return (
+            <tr>{x}</tr>			
+            
+        );
+    }
+});
+var data = [
+	[ {sv_id: 0,id: 0, value: 0},{sv_id: 0,id: 1, value: 1}],
+	[ {sv_id: 1,id: 0, value: 0},{sv_id: 1,id: 1, value: 1}]
+];	
+
+
+var Grade = React.createClass({
+	getInitialState: function(){
+        return {active: -1, active2: -1};
+    },    
+    getStatus: function(id, id2){        
+        if (this.state.active === id && this.state.active2 === id2) {
+            return 1;
+        } else {
+            return 0;
+        }
+    },    
+	handleInput: function(obj, obj2){   		
+        this.setState({active: obj, active2: obj2});
+    },
+    handleBlur: function(){
+        this.setState({active: -1, active2: -1});
+    },
+	handleChange: function(d){
+		return false;
+	},
+	handleKeyPress: function(obj, obj2, stat){
+		if (stat == 'enter'){
+			this.setState({active: -1, active2: -1});
+		} else if (stat == 'up') {
+			this.setState({active: obj, active2: obj2 - 1});
+		} else if (stat == 'down') {
+			this.setState({active: obj, active2: obj2 + 1});
+		}
+	},	
+	render: function(){
+		var self = this;
+		var y = this.props.data.map(function(d){
+			return d.map(function(d2){
+				d2.edit = self.getStatus(d2.id, d2.sv_id);
+				return d2;
+			});
+		});		
+		var x = y.map(function(d){			
+			return <Row handleKeyPress={self.handleKeyPress} handleChange={self.handleChange} handleInput={self.handleInput} handleBlur={self.handleBlur} data={d} />
+		});
+		return (
+			<table>
+            <tbody>
+            {x}</tbody>
+            </table>
+		);
+	}
+});
+React.renderComponent(<Grade data={data} />, document.getElementById('example'));
+
+
+    </script>
+  </body>
+</html>
