@@ -11,13 +11,13 @@
       /** @jsx React.DOM */
 	
 	var DATA = [
-		{group_id: 1, name: 'BT1', assignments: 
+		{assignment_group_id: 1, name: 'BT1', assignments: 
 				[
 					{assignment_id: 1, name: 'BT11', score: 10},
 					{assignment_id: 2,name: 'BT12', score: 8}
 				]
 		},
-		{group_id: 2, name: 'BT2', assignments: 
+		{assignment_group_id: 2, name: 'BT2', assignments: 
 				[
 					{assignment_id: 3, name: 'BT21', score: 9},
 					{assignment_id: 4,name: 'BT22', score: 8}
@@ -29,7 +29,7 @@
 		},
 		handleChange: function(obj){
 			var x = this.state.data.filter(function(t){
-				return t.group_id === obj.group_id;
+				return t.assignment_group_id === obj.assignment_group_id;
 			});
 			if (x.length > 0) {
 				var y = x[0];
@@ -39,9 +39,18 @@
 				}
 			}
 		},
-		findAssignment: function(group_id, assignment_id){
+		findGroup: function(assignment_group_id){
 			var x = this.state.data.filter(function(t){
-				return t.group_id === group_id;
+				return t.assignment_group_id === assignment_group_id;
+			});
+			if (x.length > 0) {
+				return x[0];
+			}
+			return null;
+		},
+		findAssignment: function(assignment_group_id, assignment_id){
+			var x = this.state.data.filter(function(t){
+				return t.assignment_group_id === assignment_group_id;
 			});
 			
 			if (x.length > 0) {
@@ -68,20 +77,26 @@
 			this.loadData();
 		},
 		
-		
+		handleEdit: function(obj){
+			var group = this.findGroup(obj.id);
+			if (group != null) {
+				group.name = obj.name;
+				this.forceUpdate();
+			}
+		},
 		handleUpdate: function(d){
-			var a = this.findAssignment(d.group_id, d.assignment_id);
+			var a = this.findAssignment(d.assignment_group_id, d.assignment_id);
 			if (a != null) {
 				a.name = d.name;
 				a.score = d.score;								
-				forceUpdate();
+				this.forceUpdate();
 			}
 			return false;
 		},
 		render: function(){
 			var self = this;
 			var x = this.state.data.map(function(d){
-				return <li><p>{d.name}</p><AssignmentGroup  onUpdate={self.handleUpdate} group={d.group_id} onChange={self.handleChange} data={d.assignments} /></li>
+				return <AssignmentGroup onEdit={self.handleEdit} group_name={d.name} onUpdate={self.handleUpdate} group={d.assignment_group_id} onChange={self.handleChange} data={d.assignments} />
 			});
 			return (
 				<ul>{x}</ul>				
@@ -90,49 +105,104 @@
 	});
 	var AssignmentGroup = React.createClass({
 		getInitialState: function(){
-			return {add: 0};
+			return {add: 0, edit: 0};
 		},
-		handleClick: function(){
-			this.setState({add: 1});
+		handleClick: function(){			
+			this.setState({add: 1, edit: 0});
 		},
-		handleCancel: function(){
-			this.setState({add: 0});
+		handleCancel: function(){			
+			this.setState({add: 0, edit: 0});
 		},	
-		handleUpdate: function(){
+		handleUpdate: function(){			
 			var name = this.refs.name.getDOMNode().value;
 			var score = this.refs.score.getDOMNode().value;
-			this.setState({add: 0});
-			this.props.onChange({group_id: this.props.group, name: name, score: score});
+			this.setState({add: 0, edit: 0});
+			this.props.onChange({assignment_group_id: this.props.group, name: name, score: score});
 		},
 		handleChange: function(e){
 			var name = this.refs.name.getDOMNode().value;
 			var score = this.refs.score.getDOMNode().value;
 			this.setState({name: name, score: score});
 		},
+		cancelUpdateName: function(){			
+			this.setState({edit: 0, add: 0});
+		},
+		handleUpdateName: function(){			
+			this.setState({add: 0, edit: 1});
+		},
+		componentDidUpdate: function(){
+			$('#group' + this.props.group).val(this.props.group_name);
+		},
+		handleEdit: function(){
+			var x = this.refs.name.getDOMNode().value;
+			this.props.onEdit({id: this.props.group, name: x});
+			this.setState({edit: 0, add: 0});
+		},
+
 		render: function(){
 			var self = this;			
 			var x = this.props.data.map(function(d){
-				return <Assignment data={d}  onUpdate={self.props.onUpdate} />				
-				return <li>a</li>
-			});
+				return <Assignment data={d}  onUpdate={self.props.onUpdate} />
+			});			
 			if (this.state.add === 0){
-				return (							
-					<div>
-						<button onClick={this.handleClick}>Add</button>
-						<ul>{x}</ul>
-					</div>
-				);
+				if (this.state.edit === 0){
+					return ( <li>
+						<div onClick={this.handleUpdateName}>{this.props.group_name}</div><div>
+							<button onClick={this.handleClick}>Add</button>
+							<ul>{x}</ul>
+						</div>
+						</li>
+					);
+				} else {
+					return (
+						<li>
+						<div>
+							<input ref="name" type="text" id={"group" + this.props.group} />
+							<button onClick={this.cancelUpdateName}>Cancel</button>
+							<button onClick={this.handleEdit}>Update</button>
+						</div>
+						<div>
+							<button onClick={this.handleClick}>Add</button>
+							<ul>{x}</ul>
+						</div>
+						</li>
+					);
+				}
+				
 			}
 			else {
-				return (
-					<div>
-							<input onChange={this.handleChange} ref="name" type="text" placeholder="Name" value={this.state.name} />
-							<input onChange={this.handleChange} ref="score" type="text" placeholder="Score" value={this.state.score} />
+				if (this.state.edit === 0){
+					return (
+						<li>
+						<div onClick={this.handleUpdateName}>{this.props.group_name}</div>
+						<div>
+							<input onChange={this.handleChange} ref="name" type="text" placeholder="Name"  />
+							<input onChange={this.handleChange} ref="score" type="text" placeholder="Score"  />
 							<button onClick={this.handleCancel} >Cancel</button>
 							<button onClick={this.handleUpdate} >Update</button>
-						<ul>{x}</ul>
-					</div>
-				);
+							<ul>{x}</ul>
+						</div>
+						</li>
+					);
+				}
+				else {
+					return (
+						<li>
+						<div>
+							<input ref="name" type="text" id={"group" + this.props.group} />
+							<button onClick={this.cancelUpdateName}>Cancel</button>
+							<button onClick={this.handleEdit}>Update</button>
+						</div>
+						<div>
+							<input onChange={this.handleChange} ref="name" type="text" placeholder="Name"  />
+							<input onChange={this.handleChange} ref="score" type="text" placeholder="Score"  />
+							<button onClick={this.handleCancel} >Cancel</button>
+							<button onClick={this.handleUpdate} >Update</button>							
+							<ul>{x}</ul>
+						</div>
+						</li>
+					);
+				}
 			}
 		}
 	});
